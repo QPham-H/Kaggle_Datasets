@@ -91,8 +91,7 @@ history = model.fit(
 	train_data,
 	validation_data = val_data,
 	epochs = epoch_num,
-	callbacks = [early_stopping],
-
+	callbacks = [early_stopping]
 )
 
 # Evaluating the model
