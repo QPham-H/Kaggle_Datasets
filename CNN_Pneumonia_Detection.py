@@ -1,30 +1,34 @@
 # Code by Quoc Pham for Kaggle's Pneumonia Detection Dataset
 import tensorflow as tf
 import os
+from keraslayers import Dense, Dropout, Input, Flatten
 
 
 # We are using transfer learning aka a pre-trained cnn model with frozen weights, so we will resize our images to fit the input size
 epoch_num = 25
 batch_s = 32 # Batch sizes should be of a power of 2 that fits the memory requirement of the device
-img_ht =  # Height and width to match inputs of pre-trained model
-img_wd = 
+img_ht =  224 # Height and width to match inputs of pre-trained model
+img_wd = 224
 
 # Loading dataset and pre-processing
 # Note that folder structure has images already separated into two subfolders in the above directories
 # Utilize the directory structure to our advantage and create a tf Dataset object for ease of use
 train_data = tf.preprocessing.image_dataset_from_directory(
 	'/input/chest-xray-pneumonia/chest_xray/train',
-	
+	image_size = (img_ht, img_wd),
+	batch_size = batch_s,
 )
 	
 val_data = tf.preprocessing.image_dataset_from_directory(
 	'/input/chest-xray-pneumonia/chest_xray/val',
-	
+	image_size = (img_ht, img_wd),
+	batch_size = batch_s,
 )
 
 test_data = tf.preprocessing.image_dataset_from_directory(
 	'/input/chest-xray-pneumonia/chest_xray/test',
-	
+	image_size = (img_ht, img_wd),
+	batch_size = batch_s,
 )
 
 # Checking the size of the training data for the binary classification 
@@ -36,17 +40,23 @@ print(len(os.listdir('/input/chest-xray-pneumonia/chest_xray/train/PNEUMONIA')))
 # Using data augmentation to oversample the minority set at the risk of overfitting
 
 # Building the model by transfer learning, i.e. pre-trained weights for the CNN but with additional custom FFNN
-model = tf.keras.applications.ResNet50(
+base_model = tf.keras.applications.ResNet50(
 	include_top = False,
 	weights = 'imagenet',
-	input_shape = [],
 	pooling = 'max'
 )
 
+print(base_model.summary())
+
+# Freeze the pre-trained weights in the CNN layers
+for layers in base_model.layers:
+	layer.trainable = False
+
 # Adding the FFNN layers
-model.add(tf.keras.layers.Flatten)
+
+model.add(Dense(
 		
-# Training the model with Kfold CV
+# Training the model (future edits to include Kfold CV)
 metrics = [
 	tf.keras.metrics.BinaryAccuracy(name='accuracy'),
 	tf.keras.metrics.Precision(name='precision'),
@@ -68,7 +78,6 @@ history = model.fit(
 	train_data,
 	validation_data = val_data,
 	epochs = epoch_num,
-	batch_size = batch_s,
 	callbacks = [early_stopping],
 
 )
