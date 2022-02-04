@@ -36,13 +36,16 @@ print(len(os.listdir('/input/chest-xray-pneumonia/chest_xray/train/PNEUMONIA')))
 # Using data augmentation to oversample the minority set at the risk of overfitting
 
 # Building the model by transfer learning, i.e. pre-trained weights for the CNN but with additional custom FFNN
-resnet50_model = tf.keras.applications.ResNet50(
+model = tf.keras.applications.ResNet50(
 	include_top = False,
 	weights = 'imagenet',
-	input_shape = [
+	input_shape = [],
 	pooling = 'max'
 )
 
+# Adding the FFNN layers
+model.add(tf.keras.layers.Flatten)
+		
 # Training the model with Kfold CV
 metrics = [
 	tf.keras.metrics.BinaryAccuracy(name='accuracy'),
