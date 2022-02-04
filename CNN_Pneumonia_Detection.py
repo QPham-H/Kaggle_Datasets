@@ -2,7 +2,7 @@
 import tensorflow as tf
 import os
 from keraslayers import Dense, Dropout, Input, Flatten
-
+from keras.models import Sequential, Model
 
 # We are using transfer learning aka a pre-trained cnn model with frozen weights, so we will resize our images to fit the input size
 epoch_num = 25
@@ -37,13 +37,13 @@ print(len(os.listdir('/input/chest-xray-pneumonia/chest_xray/train/NORMAL')))
 print("Number of PNEUMONIA training data: ")
 print(len(os.listdir('/input/chest-xray-pneumonia/chest_xray/train/PNEUMONIA')))
 
-# Using data augmentation to oversample the minority set at the risk of overfitting
+# Using data augmentation (by rotations) to oversample the minority set at the risk of overfitting
 
 # Building the model by transfer learning, i.e. pre-trained weights for the CNN but with additional custom FFNN
 base_model = tf.keras.applications.ResNet50(
 	include_top = False,
 	weights = 'imagenet',
-	pooling = 'max'
+	pooling = 'max' # Global Max Pooling to be applied
 )
 
 print(base_model.summary())
@@ -51,10 +51,23 @@ print(base_model.summary())
 # Freeze the pre-trained weights in the CNN layers
 for layers in base_model.layers:
 	layer.trainable = False
+	
+# Adding Input layer to be pre-processed by ResNet50, i.e. normalize by subtracting the mean of the imagenet data set
+input = Input([img_ht, img_wd, 3], dtype = tf.uint8)
+x = tf.keras.applications.resnet50.preprocess_input(input)
+x = base_model(x)
 
 # Adding the FFNN layers
+FFNN_model = Sequential()
+FFNN_model.add(Dense(1024, activation='relu'))
+FFNN_model.add(Dropout(0.2))
+FFNN_model.add(Dense(512, activation='relu'))
+FFNN_model.add(Dropout(0.2))
+FFNN_model.add(Dense(1, activation='sigmoid')) # sigmoid for binary and softmax for more than 2 classes
 
-model.add(Dense(
+# Combining the FFNN model together with the base model
+x = FFNN_model(x)
+model = Model(inputs = [input], outputs = [x])
 		
 # Training the model (future edits to include Kfold CV)
 metrics = [
