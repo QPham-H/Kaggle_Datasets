@@ -1,4 +1,5 @@
-# Code by Quoc Pham for Kaggle's Pneumonia Detection Dataset
+# Code by Quoc Pham for Kaggle's Pneumonia Detection Dataset v1.6
+
 import tensorflow as tf
 import os
 from keraslayers import Dense, Dropout, Input, Flatten
@@ -37,7 +38,7 @@ print(len(os.listdir('/input/chest-xray-pneumonia/chest_xray/train/NORMAL')))
 print("Number of PNEUMONIA training data: ")
 print(len(os.listdir('/input/chest-xray-pneumonia/chest_xray/train/PNEUMONIA')))
 
-# Using data augmentation (by rotations) to oversample the minority set at the risk of overfitting
+# In next version update, we'll use data augmentation (by rotations) to oversample the minority set at the risk of overfitting
 
 # Building the model by transfer learning, i.e. pre-trained weights for the CNN but with additional custom FFNN
 base_model = tf.keras.applications.ResNet50(
@@ -59,8 +60,6 @@ x = base_model(x)
 
 # Adding the FFNN layers
 FFNN_model = Sequential()
-FFNN_model.add(Dense(1024, activation='relu'))
-FFNN_model.add(Dropout(0.2))
 FFNN_model.add(Dense(512, activation='relu'))
 FFNN_model.add(Dropout(0.2))
 FFNN_model.add(Dense(1, activation='sigmoid')) # sigmoid for binary and softmax for more than 2 classes
@@ -69,7 +68,7 @@ FFNN_model.add(Dense(1, activation='sigmoid')) # sigmoid for binary and softmax 
 x = FFNN_model(x)
 model = Model(inputs = [input], outputs = [x])
 		
-# Training the model (future edits to include Kfold CV)
+# Training the model (next version to include Kfold CV)
 metrics = [
 	tf.keras.metrics.BinaryAccuracy(name='accuracy'),
 	tf.keras.metrics.Precision(name='precision'),
